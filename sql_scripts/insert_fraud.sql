@@ -37,7 +37,9 @@ WHERE
             AND t.fio = CONCAT(kddc2.last_name, ' ', kddc2.first_name, ' ', kddc2.patronymic)
             AND t.phone = kddc2.phone
             AND t.event_type = 1
-    );
+    )
+GROUP BY
+    kdft.trans_date, kddc2.passport_num, fio, kddc2.phone;
 
 -- type 2. Совершение операции при недействующем договоре
 INSERT into public.kkar_rep_fraud(
