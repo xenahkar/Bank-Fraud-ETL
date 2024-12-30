@@ -8,7 +8,7 @@ INSERT INTO
         event_type,
         report_dt
     )
-SELECT 
+SELECT DISTINCT
     kdft.trans_date AS event_dt,
     kddc2.passport_num AS passport_num,
     CONCAT(kddc2.last_name, ' ', kddc2.first_name, ' ', kddc2.patronymic) AS fio,
@@ -23,12 +23,20 @@ LEFT JOIN
     public.kkar_dwh_dim_accounts kdda ON kddc.account_num = kdda.account_num
 LEFT JOIN 
     public.kkar_dwh_dim_clients kddc2 ON kdda.client = kddc2.client_id
-WHERE 
-    (
+WHERE
     	-- заблокированный паспорт
     	kddc2.passport_num IN (SELECT passport_num FROM public.kkar_dwh_fact_passport_blacklist)
     	-- просроченный паспорт
 	    OR kddc2.passport_valid_to < DATE(kdft.trans_date)
+	    AND NOT EXISTS (
+        SELECT 1
+        FROM public.kkar_rep_fraud t
+        WHERE
+            t.event_dt = kdft.trans_date
+            AND t.passport_num = kddc2.passport_num
+            AND t.fio = CONCAT(kddc2.last_name, ' ', kddc2.first_name, ' ', kddc2.patronymic)
+            AND t.phone = kddc2.phone
+            AND t.event_type = 1
     );
 
 -- type 2. Совершение операции при недействующем договоре
@@ -40,7 +48,7 @@ INSERT into public.kkar_rep_fraud(
 	event_type,
 	report_dt
 	)
-    SELECT
+    SELECT DISTINCT
         kdft.trans_date AS event_dt,
 	    kddc2.passport_num AS passport,
 	    CONCAT(kddc2.last_name, ' ', kddc2.first_name, ' ', kddc2.patronymic) AS fio,
@@ -56,7 +64,17 @@ INSERT into public.kkar_rep_fraud(
 	LEFT JOIN
 	    public.kkar_dwh_dim_clients kddc2 ON kdda.client = kddc2.client_id
 	WHERE
-	    kdda.valid_to < DATE(kdft.trans_date);
+	    kdda.valid_to < DATE(kdft.trans_date)
+	    AND NOT EXISTS (
+        SELECT 1
+        FROM public.kkar_rep_fraud t
+        WHERE
+            t.event_dt = kdft.trans_date
+            AND t.passport_num = kddc2.passport_num
+            AND t.fio = CONCAT(kddc2.last_name, ' ', kddc2.first_name, ' ', kddc2.patronymic)
+            AND t.phone = kddc2.phone
+            AND t.event_type = 2
+    );
 
 -- type 3. Совершение операций в разных городах в течение одного часа.
 WITH ranked_transactions AS (
@@ -80,7 +98,7 @@ WITH ranked_transactions AS (
 			left join public.kkar_dwh_dim_accounts kdda ON kgdc.account_num = kdda.account_num
 			left join public.kkar_dwh_dim_clients kddc2 ON kdda.client = kddc2.client_id
 			left join public.kkar_dwh_dim_terminals kddt ON kdft.terminal = kddt.terminal_id)
-)
+ AS inner_query)
 INSERT INTO
 	public.kkar_rep_fraud(
 		event_dt,
@@ -104,4 +122,14 @@ JOIN
 WHERE
     t1.terminal_city <> t2.terminal_city
     AND t1.rn <> t2.rn
-    AND ABS(EXTRACT(EPOCH FROM (t1.event_dt - t2.event_dt))) <= 3600;
+    AND ABS(EXTRACT(EPOCH FROM (t1.event_dt - t2.event_dt))) <= 3600
+    AND NOT EXISTS (
+        SELECT 1
+        FROM public.kkar_rep_fraud t3
+        WHERE
+            t3.event_dt = t1.event_dt
+            AND t3.passport_num = t1.passport_num
+            AND t3.fio = t1.fio
+            AND t3.phone = t1.phone
+            AND t3.event_type = 3
+    );
