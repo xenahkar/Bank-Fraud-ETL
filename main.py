@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 from config import Config
 
-# Подключение к локальной бд
+# подключение к локальной бд
 connection_local = psycopg2.connect(**Config.local)
 connection_local.autocommit = False
 
@@ -39,7 +39,6 @@ with connection_local.cursor() as cursor:
                 print(f"Ошибка в очищениитаблицы {table}: {te}")
         connection_local.commit()
         print("Стейджинг очищен.")
-
 
 # получение названия файлов из папки data и даты из их названия
 data_folder = 'data'
@@ -77,7 +76,6 @@ with connection_local.cursor() as cursor:
     except Exception as e:
         connection_local.rollback()
         print(f"Ошибка вставки данных 'terminals' в стейджинг: {e}")
-
 
 # загрузка файла passport_blacklist_xxxxxxxx.xlsx в стейджинг
 passport_blacklist = pd.read_excel(os.path.join(data_folder, passport_blacklist_files[0]))
@@ -171,7 +169,6 @@ try:
 except Exception as e:
     print(f"Ошибка при обновлении данных в таблицу kkar_dwh_dim_terminals: {e}.")
 
-
 # загрузка данных из стейджинга в целевую таблицу kkar_dwh_dim_cards
 query = open(f"{os.getcwd()}/sql_scripts/insert_cards_dwh.sql", "r").read()
 try:
@@ -181,7 +178,6 @@ try:
         print("Данные успешно загружены в таблицу kkar_dwh_dim_cards.")
 except Exception as e:
     print(f"Ошибка при загрузке данных в таблицу kkar_dwh_dim_cards: {e}")
-
 
 # загрузка данных из стейджинга в целевую таблицу kkar_dwh_dim_accounts
 query = open(f"{os.getcwd()}/sql_scripts/insert_accounts_dwh.sql", "r").read()
@@ -203,8 +199,6 @@ try:
 except Exception as e:
     print(f"Ошибка при загрузке данных в таблицу kkar_dwh_dim_clients: {e}")
 
-
-
 # загрузка данных из стейджинга в целевую таблицу kkar_dwh_fact_passport_blacklist
 query = open(f"{os.getcwd()}/sql_scripts/insert_passport_blacklist_dwh.sql", "r").read()
 try:
@@ -225,19 +219,9 @@ try:
 except Exception as e:
     print(f"Ошибка при загрузке данных в таблицу kkar_dwh_fact_transactions: {e}")
 
-
 # признаки мошеннических операций: запись в rep_fraud
 query = open(f"{os.getcwd()}/sql_scripts/insert_fraud.sql", "r").read()
 report_dt = datetime.now().strftime('%Y-%m-%d')
-'''
-try:
-    with connection_local.cursor() as cursor:
-        cursor.executemany(query, report_dt)
-        connection_local.commit()
-        print("Данные успешно загружены в таблицу kkar_rep_fraud.")
-except Exception as e:
-    print(f"Ошибка при загрузке данных в таблицу kkar_rep_fraud: {e}")
-'''
 try:
     with connection_local.cursor() as cursor:
         commands = query.split(';')
@@ -253,13 +237,12 @@ try:
 except Exception as e:
     print(f"Ошибка при подключении или выполнении: {e}.")
 
-
 # закрытие соединений бд
 connection_local.close()
 connection_pg.close()
 print(f'Отчет за {dates[0]} загружен.')
 
-# Переименование обработанных файлов и их перенос в другой каталог
+# переименование обработанных файлов и их перенос в другой каталог
 try:
     os.rename(f'{os.getcwd()}/data/{terminals_files[0]}', f'{os.getcwd()}/archive/{terminals_files[0]}.backup')
     os.rename(f'{os.getcwd()}/data/{transactions_files[0]}', f'{os.getcwd()}/archive/{transactions_files[0]}.backup')
