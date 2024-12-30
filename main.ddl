@@ -1,6 +1,6 @@
 -- STG
 create table public.kkar_stg_transactions(
-	trans_id varchar,
+	trans_id varchar PRIMARY KEY,
 	trans_date timestamp,
 	card_num varchar,
 	oper_type varchar,
@@ -20,18 +20,18 @@ create table public.kkar_stg_terminals(
 
 create table public.kkar_stg_blacklist (
 	entry_dt date,
-	passport_num varchar
+	passport_num varchar PRIMARY KEY
 	);
 
 create table public.kkar_stg_cards(
-	card_num varchar primary key,
+	card_num varchar PRIMARY KEY,
 	account_num varchar,
 	create_dt date,
 	update_dt date
 	);
 
 create table public.kkar_stg_accounts(
-	account_num varchar primary key,
+	account_num varchar PRIMARY KEY,
 	valid_to date,
 	client varchar,
 	create_dt date,
@@ -39,7 +39,7 @@ create table public.kkar_stg_accounts(
 	);
 
 create table public.kkar_stg_clients(
-	client_id varchar primary key,
+	client_id varchar PRIMARY KEY,
 	last_name varchar,
 	first_name varchar,
 	patronymic varchar,
@@ -53,7 +53,7 @@ create table public.kkar_stg_clients(
 
 -- Fact
 create table public.kkar_dwh_fact_transactions(
-	trans_id varchar unique,
+	trans_id varchar PRIMARY KEY,
 	trans_date timestamp,
 	card_num varchar,
 	oper_type varchar,
@@ -64,12 +64,12 @@ create table public.kkar_dwh_fact_transactions(
 
 create table public.kkar_dwh_fact_passport_blacklist(
 	entry_dt date,
-	passport_num varchar
+	passport_num varchar PRIMARY KEY
 	);
 
 -- DWH
 create table public.kkar_dwh_dim_terminals(
-	terminal_id varchar primary key,
+	terminal_id varchar PRIMARY KEY,
 	terminal_type varchar,
 	terminal_city varchar,
 	terminal_address varchar,
@@ -78,14 +78,14 @@ create table public.kkar_dwh_dim_terminals(
 	);
 
 create table public.kkar_dwh_dim_cards(
-	card_num varchar primary key,
+	card_num varchar PRIMARY KEY,
 	account_num varchar,
 	create_dt date,
 	update_dt date
 	);
 
 create table public.kkar_dwh_dim_accounts(
-	account_num varchar unique,
+	account_num varchar PRIMARY KEY,
 	valid_to date,
 	client varchar,
 	create_dt date,
@@ -93,7 +93,7 @@ create table public.kkar_dwh_dim_accounts(
 	);
 
 create table public.kkar_dwh_dim_clients(
-	client_id varchar unique primary key,
+	client_id varchar PRIMARY KEY,
 	last_name varchar,
 	first_name varchar,
 	patronymic varchar,
