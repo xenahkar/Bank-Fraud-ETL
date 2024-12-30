@@ -53,7 +53,6 @@ for num_date in range(len(dates)):
 # загрузка файла transactions_xxxxxxxx.txt в стейджинг
 transactions = pd.read_csv(os.path.join(data_folder, transactions_files[0]), sep=";")
 transactions["amount"] = transactions["amount"].map(lambda z: z.strip().replace(',', '.'))
-# transactions['create_dt'] = dates[0]
 query = open(f"{os.getcwd()}/sql_scripts/insert_transactions_stg.sql", "r").read()
 with connection_local.cursor() as cursor:
     try:
@@ -136,7 +135,6 @@ with connection_pg.cursor() as cursor:
         records = cursor.fetchall()
         col_names = [x[0] for x in cursor.description]
         cards = pd.DataFrame(records, columns=col_names)
-        # print(cards.head())
     except Exception as e:
         print(f"Ошибка при загрузке таблицы cards в датафрейм: {e}")
 
